@@ -1,0 +1,1 @@
+cord = aggregate(cbind(V4,V5)~V3, data=tdata, mean)
