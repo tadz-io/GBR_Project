@@ -1,18 +1,9 @@
-tab = aggregate(cbind(cdata$lat,cdata$lon), by = list(cdata$image,cdata$trans), FUN = "mean")
-colnames(tab ) = c("image","trans","lat","lon")
+#declare variable for storage histograms per transect. atm not sure if data.frame is appropriate data struct to store histograms
+imdist = data.frame()
 
-trans = unique(cdata$trans)
-
-dist = data.frame()
-or.trans = data.frame()
-
-for (i in (2:length(tab[,1])))
-  {
-    dist[i,1] = tab[i,1]
-    dist[i,2] = earth.dist(tab$lon[i],tab$lat[i],tab$lon[i-1],tab$lat[i-1])
-  }
-
-for (j in 1:length(trans))
-  {
-  or.trans[j,1] = cdata[cdata$trans==trans[j],2][1] 
-  }
+#subset the dataset per transect and calculate distance between images using dist function
+for (i in 1:length(unique(cdata$trans)))
+{
+  sdata = subset(cdata,trans==unique(trans)[i])
+  imdist[i] = hist(dist(sdata$lat,sdata$lon)) 
+}
