@@ -1,15 +1,27 @@
 # function to calculate distance between coordinates. Estimates should be ok for short distances between coordinates.
 # function does not assume curvature of the earth
 
-dist = function(lat,lon)
+dist = function(dat)
 {
-  #declare output as vector
-  d = c()
+  library("sp")
+  library("rgdal")
   
-  # iterate over the coordinate vectors and calculate distance using pythagoras
-  for (i in 1:length(lat)-1)
+  #declare output as vector
+  len = length(dat[,1])
+  d = data.frame(image = numeric(len),
+                 dist = numeric(len))
+  
+  #project coordinates to utm
+  coordinates(dat) = c("lon","lat")
+  proj4string(dat) = CRS("+proj=longlat +datum=WGS84")
+  tdata<-spTransform(dat,CRS("+proj=utm +zone=55 +datum=WGS84"))
+  as(tdata,"SpatialPoints")
+  
+  # iterate over the utm coordinates and calculate distance using pythagoras
+  for (i in 1:len-1)
   {
-    d[i] = sqrt((lat[i+1]-lat[i])^2+(lon[i+1]-lon[i])^2)
+    d[i,1] = tdata$image[i]
+    d[i,2] = sqrt((tdata$lat[i+1]-tdata$lat[i])^2+(tdata$lon[i+1]-tdata$lon[i])^2)
   }
   
   return(d)
