@@ -1,10 +1,3 @@
-#import data file
-data = read.csv(file.choose(),head=FALSE)
-colnames(data) = c("id","image","trans","lat","lon","label","func. group","descr.","cover")
-
-#cast dataset
-cdata = cast(id+image+trans+lat+lon~label,data=data,mean)
-
 #calculate centroid per transect
 trans = unique(cdata$trans)
 im.count = data.frame()
