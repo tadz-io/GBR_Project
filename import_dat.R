@@ -1,3 +1,8 @@
+# IMPORT OF GBR DATASET
+# script imports GBR dataset (.csv) and casts by ID first
+# not all transects included: see comments below
+#**********************************************************
+
 #import data file
 data = read.csv(file.choose(),head=FALSE)
 colnames(data) = c("id","image","trans","lat","lon","label","func. group","descr.","cover")
