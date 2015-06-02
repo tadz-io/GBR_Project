@@ -1,5 +1,9 @@
-# function to calculate distance between coordinates. Estimates should be ok for short distances between coordinates.
+# DIST FUNCTION
+
+# function calculates euclidian distance between coordinates. Estimates should be ok for short distances between coordinates.
+# function takes geographical coodinates and projects these to UTMs
 # function does not assume curvature of the earth
+#****************************************************************************************************************************
 
 dist = function(dat)
 {
