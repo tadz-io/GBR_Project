@@ -3,20 +3,16 @@
 # transects to exclude: 10004,10005,10007,10009,14008,15011
 # function only takes casted dataset of GBR (cdata; see import_dat.R)
 # ******************************************************************************************************
-trendsurf = function(dat)
+trendsurf = function(dat, nsamp, npoint)
 {
+  # libraries
   require("sp")
   require("ade4")
   require("vegan")
-  
-  # subset dataset per transect; cdata (=raw data) obtained using import_dat.R script
-  # aggregate data by image -> mean is calculated for cover estimates per functional group
-  sdata = aggregate(.~image, data = subset(dat, trans==13002), mean)
-  # remove id column (does not carry valuable information anymore after aggregation)
-  sdata = sdata[,-2]
+  require("ncf")
   
   # extract coordinates and project to UTM coordinate system
-  xy = sdata[,3:4]
+  xy = dat[,3:4]
   coordinates(xy) = c("lon","lat")
   proj4string(xy) = CRS("+proj=longlat +datum=WGS84")
   xy = spTransform(xy, CRS("+proj=utm +zone=55 +datum=WGS84"))
@@ -24,7 +20,7 @@ trendsurf = function(dat)
   xy = data.frame(xy)
   
   # create seperate dataframe for species (excluding catagories Unc (=unclear) and WATE (=water)); MANUEL, YOU AGREE??  
-  sp = sdata[,5:25]
+  sp = dat[,5:25]
   
   # center coordinates
   xy.c = scale(xy, scale=FALSE)
@@ -68,8 +64,17 @@ trendsurf = function(dat)
   # data detrending
   sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) # or only selecting lc scores of significant RDA axis???
   
-  #return detrended data and coordinates
-  output = list("sp.h.det" = sp.h.det, "xy"= xy)
+  #remove sp.h from global environment
+  rm(sp.h)
+  
+  # produce spline correlogram
+  spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
+  
+  # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
+  output = c(trans = dat$trans[i], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept), sd = sd(spline$boot$boot.summary$x.intercept))
+  
   return(output)
-}
+  }
 
+
+  
