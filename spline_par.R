@@ -4,6 +4,7 @@
 #  - trendsurf function computes spline correlogram of detrended data
 #  
 # ************************************************************************************************************************
+
 trendsurf = function(dat, nsamp, npoint)
 {
   # libraries
@@ -47,7 +48,7 @@ trendsurf = function(dat, nsamp, npoint)
   sp.trend.rda2 = rda(sp.h ~ ., data=as.data.frame(xy.poly)[,poly.sel])
   
   # test for significance of RDA axis
-  anova.cca(sp.trend.rda2, step=1000, by="axis")
+  # anova.cca(sp.trend.rda2, step=1000, by="axis")
   
   # plot first three (significant) axes
   #--------------------------------------------------------------------------------------------------------------------------------------------
@@ -57,11 +58,11 @@ trendsurf = function(dat, nsamp, npoint)
   # WA scores = weighted averages (sums) of the species scores that are as simimlar to LC scores as possible. WA scores are in species space.
   # LC scores show were the site should be; the WA scores show where the site is.
   #--------------------------------------------------------------------------------------------------------------------------------------------
-  sp.trend.fit = scores(sp.trend.rda2, choices=c(1,2,3), display="lc", scaling=1)
-  par(mfrow=c(1,3))
-  s.value(xy.c, sp.trend.fit[,1])
-  s.value(xy.c, sp.trend.fit[,2])
-  s.value(xy.c, sp.trend.fit[,3])
+  # sp.trend.fit = scores(sp.trend.rda2, choices=c(1,2,3), display="lc", scaling=1)
+  # par(mfrow=c(1,3))
+  # s.value(xy.c, sp.trend.fit[,1])
+  # s.value(xy.c, sp.trend.fit[,2])
+  # s.value(xy.c, sp.trend.fit[,3])
   
   # data detrending
   sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) # or only selecting lc scores of significant RDA axis???
@@ -73,30 +74,36 @@ trendsurf = function(dat, nsamp, npoint)
   spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
   
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  output = c(dat$trans[i], spline$real$x.intercept, mean(spline$boot$boot.summary$x.intercept), sd(spline$boot$boot.summary$x.intercept))
+  output = c(trans       = dat$trans[1],
+             x.intercept = spline$real$x.intercept,
+             mean        = mean(spline$boot$boot.summary$x.intercept),
+             sd          = sd(spline$boot$boot.summary$x.intercept))
   
   return(output)
 }
 
 # load casted GBR dataset
 #*************************
-load("/Users/tadzio/Documents/UQ\ Project/Repository/GBR_Project/cdata.Rda")
+load("cdata.Rda")
 
 # run trendsurf script in parallel
+# to do: use mclapply function and split dataset per transect:
+# http://lcolladotor.github.io/2013/11/14/Reducing-memory-overhead-when-using-mclapply/#.VXGb9UIkJUQ
 # ********************************
-
-library(doSNOW)
+library(foreach)
+library(doMC)
 # specify threads and register clusters
-threads = 2
-cl = makeCluster(threads)
+threads = 4
+cl = makeCluster(threads, outfile="")
 registerDoSNOW(cl)
 
 # specify tasks to be run in parallel
 N = unique(cdata$trans)
 
 # run trendsurf in parallel
-result = foreach(i=1:2, .combine=rbind) %dopar%
+result = foreach(i=1:4, .combine=rbind) %dopar%
 {
+  cat(paste("\n","Starting transect",N[i],"\n"), file="log.txt", append=TRUE)
   trendsurf(subset(cdata, trans==N[i]), 2, 300)
 }
  
@@ -106,4 +113,4 @@ stopCluster(cl)
 # convert matrix to dataframe
 result = data.frame(result)
 # save result to directory
-save(result, file="result.Rda")
+write.csv(result, file="result.csv")
