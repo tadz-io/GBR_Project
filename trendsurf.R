@@ -45,7 +45,7 @@ trendsurf = function(dat, nsamp, npoint)
   sp.trend.rda2 = rda(sp.h ~ ., data=as.data.frame(xy.poly)[,poly.sel])
   
   # test for significance of RDA axis
-  anova.cca(sp.trend.rda2, step=1000, by="axis")
+  # anova.cca(sp.trend.rda2, step=1000, by="axis")
   
   # plot first three (significant) axes
   #--------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,11 +55,11 @@ trendsurf = function(dat, nsamp, npoint)
   # WA scores = weighted averages (sums) of the species scores that are as simimlar to LC scores as possible. WA scores are in species space.
   # LC scores show were the site should be; the WA scores show where the site is.
   #--------------------------------------------------------------------------------------------------------------------------------------------
-  sp.trend.fit = scores(sp.trend.rda2, choices=c(1,2,3), display="lc", scaling=1)
-  par(mfrow=c(1,3))
-  s.value(xy.c, sp.trend.fit[,1])
-  s.value(xy.c, sp.trend.fit[,2])
-  s.value(xy.c, sp.trend.fit[,3])
+  # sp.trend.fit = scores(sp.trend.rda2, choices=c(1,2,3), display="lc", scaling=1)
+  # par(mfrow=c(1,3))
+  # s.value(xy.c, sp.trend.fit[,1])
+  # s.value(xy.c, sp.trend.fit[,2])
+  # s.value(xy.c, sp.trend.fit[,3])
   
   # data detrending
   sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) # or only selecting lc scores of significant RDA axis???
@@ -71,7 +71,7 @@ trendsurf = function(dat, nsamp, npoint)
   spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
   
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  output = c(trans = dat$trans[i], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept), sd = sd(spline$boot$boot.summary$x.intercept))
+  output = c(trans = dat$trans[1], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept), sd = sd(spline$boot$boot.summary$x.intercept))
   
   return(output)
   }
