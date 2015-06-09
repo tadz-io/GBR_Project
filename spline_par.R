@@ -7,6 +7,10 @@
 
 trendsurf = function(dat, nsamp, npoint)
 {
+  # surpress output to terminal
+  sink("log.txt")
+  #sink("/dev/null") 
+  
   # libraries
   require("sp")
   require("ade4")
@@ -74,11 +78,16 @@ trendsurf = function(dat, nsamp, npoint)
   spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
   
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  output = c(trans       = dat$trans[1],
-             x.intercept = spline$real$x.intercept,
-             mean        = mean(spline$boot$boot.summary$x.intercept),
-             sd          = sd(spline$boot$boot.summary$x.intercept))
+  output = data.frame(trans       = dat$trans[1],
+                      x.intercept = spline$real$x.intercept,
+                      mean        = mean(spline$boot$boot.summary$x.intercept),
+                      sd          = sd(spline$boot$boot.summary$x.intercept))
   
+  # undo surpression of output
+sink()
+  # output transect number
+  cat(dat$trans[1],"\n")
+  # return output
   return(output)
 }
 
@@ -90,27 +99,21 @@ load("cdata.Rda")
 # to do: use mclapply function and split dataset per transect:
 # http://lcolladotor.github.io/2013/11/14/Reducing-memory-overhead-when-using-mclapply/#.VXGb9UIkJUQ
 # ********************************
-library(foreach)
-library(doMC)
-# specify threads and register clusters
-threads = 4
-cl = makeCluster(threads, outfile="")
-registerDoSNOW(cl)
 
-# specify tasks to be run in parallel
-N = unique(cdata$trans)
+library(parallel)
+library(plyr)
+# specify threads 
+threads = 1
 
-# run trendsurf in parallel
-result = foreach(i=1:4, .combine=rbind) %dopar%
-{
-  cat(paste("\n","Starting transect",N[i],"\n"), file="log.txt", append=TRUE)
-  trendsurf(subset(cdata, trans==N[i]), 2, 300)
-}
- 
-# clear clusters
-stopCluster(cl)
+# split data
+sdata = split(cdata, as.factor(cdata$trans))
+# apply trendsurf in parallel
+res = rbind.fill(mclapply(sdata,
+                          trendsurf, nsamp = 1000, npoint = 300,
+                          mc.cores = threads,
+                          mc.preschedule = FALSE,
+                          mc.set.seed = TRUE))
 
-# convert matrix to dataframe
-result = data.frame(result)
+
 # save result to directory
-write.csv(result, file="result.csv")
+write.csv(res, file="result.csv")
