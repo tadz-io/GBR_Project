@@ -64,17 +64,20 @@ trendsurf = function(dat, nsamp, npoint)
   # data detrending
   sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) # or only selecting lc scores of significant RDA axis???
   
+  # produce spline correlogram
+  spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", filter=TRUE, save = TRUE, resamp = nsamp, npoints = npoint)
+  
+  # plot spline [optional]
+  plot(spline)
+  
+  # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
+  output = data.frame(trans = dat$trans[1], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept, na.rm = TRUE), sd = sd(spline$boot$boot.summary$x.intercept, na.rm = TRUE))
+  
   #remove sp.h from global environment
   rm(sp.h)
   
-  # produce spline correlogram
-  spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
-  
-  # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  output = c(trans = dat$trans[1], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept), sd = sd(spline$boot$boot.summary$x.intercept))
-  
-  return(output)
-  }
+  return(spline)
+}
 
 
   
