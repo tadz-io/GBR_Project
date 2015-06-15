@@ -80,15 +80,16 @@ trendsurf = function(dat, nsamp, npoint)
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
   output = data.frame(trans       = dat$trans[1],
                       x.intercept = spline$real$x.intercept,
-                      mean        = mean(spline$boot$boot.summary$x.intercept),
-                      sd          = sd(spline$boot$boot.summary$x.intercept))
+                      mean        = mean(spline$boot$boot.summary$x.intercept, na.rm = TRUE),
+                      sd          = sd(spline$boot$boot.summary$x.intercept, na.rm = TRUE))
   
   # undo surpression of output
-sink()
+  sink()
+  
   # output transect number
   cat(dat$trans[1],"\n")
   # return output
-  return(output)
+  return(list(output,plot(spline)))
 }
 
 # load casted GBR dataset
