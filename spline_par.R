@@ -8,15 +8,14 @@
 trendsurf = function(dat, nsamp, npoint)
 {
   # surpress output to terminal
-  sink("log.txt")
-  #sink("/dev/null") 
+  # sink("log.txt")
+  sink("/dev/null") 
   
   # libraries
   require("sp")
   require("ade4")
   require("vegan")
   require("ncf")
-  
   
   # extract coordinates and project to UTM coordinate system
   xy = dat[,3:4]
@@ -69,7 +68,7 @@ trendsurf = function(dat, nsamp, npoint)
   # s.value(xy.c, sp.trend.fit[,3])
   
   # data detrending
-  sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) # or only selecting lc scores of significant RDA axis???
+  sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) 
   
   #remove sp.h from global environment
   rm(sp.h)
@@ -78,18 +77,18 @@ trendsurf = function(dat, nsamp, npoint)
   spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
   
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  output = data.frame(trans       = dat$trans[1],
-                      x.intercept = spline$real$x.intercept,
-                      mean        = mean(spline$boot$boot.summary$x.intercept, na.rm = TRUE),
-                      sd          = sd(spline$boot$boot.summary$x.intercept, na.rm = TRUE))
+  
+  output = list(trans       = dat$trans[1],
+                x.intercept = spline$real$x.intercept,
+                bootint     = spline$boot$boot.summary$x.intercept)
   
   # undo surpression of output
   sink()
   
   # output transect number
-  cat(dat$trans[1],"\n")
+  cat("Finished transect:", dat$trans[1],"\n")
   # return output
-  return(list(output,plot(spline)))
+  return(output.m)
 }
 
 # load casted GBR dataset
@@ -99,22 +98,24 @@ load("cdata.Rda")
 # run trendsurf script in parallel
 # to do: use mclapply function and split dataset per transect:
 # http://lcolladotor.github.io/2013/11/14/Reducing-memory-overhead-when-using-mclapply/#.VXGb9UIkJUQ
-# ********************************
+# ***************************************************************************************************
 
 library(parallel)
 library(plyr)
+
 # specify threads 
 threads = 1
 
 # split data
 sdata = split(cdata, as.factor(cdata$trans))
 # apply trendsurf in parallel
-res = rbind.fill(mclapply(sdata,
-                          trendsurf, nsamp = 1000, npoint = 300,
-                          mc.cores = threads,
-                          mc.preschedule = FALSE,
-                          mc.set.seed = TRUE))
+res =  mclapply(sdata,
+       trendsurf, nsamp = 10, npoint = 300,
+       mc.cores = threads,
+       mc.preschedule = FALSE,
+       mc.set.seed = TRUE)
 
 
-# save result to directory
-write.csv(res, file="result.csv")
+# save result to directory as R object
+# to load use readRDS()
+saveRDS(res, file="result.rds")
