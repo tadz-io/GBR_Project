@@ -76,7 +76,7 @@ trendsurf = function(dat, nsamp, npoint)
   #remove sp.h from global environment
   rm(sp.h)
   
-  return(output)
+  return(spline)
 }
 
 
