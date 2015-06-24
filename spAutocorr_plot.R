@@ -41,12 +41,13 @@ p = ggplot(res.df, aes(x = as.factor(trans), y = bootint)) +
   geom_abline(intercept = mean(res.df$bootint, na.rm = TRUE), slope= 0, size=0.5, linetype="longdash", colour="red") +
   geom_boxplot(fill = "orange", colour = "black", alpha=0.8, outlier.shape = NA) +
   scale_y_continuous(limits = c(-10,150)) +
-  facet_grid(.~section, scale="free", space="free_x") +
-  #facet_wrap(~section, scales="fixed", ncol=1) +
+  facet_grid(. ~ section, scales="free", space="free") +
+  #facet_wrap(~section, scales="free", drop = TRUE, nrow=1) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank(), axis.line = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=0.5)),
-        axis.text.x = element_text(angle = 90, hjust = 1))
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+        axis.text.x = element_text(colour = "black", angle = 90, hjust = 1),
+        axis.text.y = element_text(colour = "black"))
      
 labs = paste("Spatial range (m) \n (x-intercept of spline correlogram)")
 p + labs(x = "transect ID", y = labs) + theme(axis.title = element_text(size = 12, face="bold"))
