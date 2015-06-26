@@ -1,4 +1,5 @@
-# extract the 25th and 975th element of every bootstrap distribution
+# Spline correlogram plot
+# extract the 25th and 975th element of every bootstrap distribution to create 95% CI (see BJORNSTAND 2001 and EFRON & TIBSHIRANI 1993)
 # in this case the function is applied to transect # 10001 and 10008
 q.t10001 = t(apply(spline.t10001$boot$boot$predicted$y, 2, quantile, probs = c(0.025,0.975)))
 q.t10008 = t(apply(spline.t10008$boot$boot$predicted$y, 2, quantile, probs = c(0.025,0.975)))
