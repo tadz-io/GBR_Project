@@ -28,6 +28,9 @@ trendsurf = function(dat, nsamp, npoint)
   # create seperate dataframe for species (excluding catagories Unc (=unclear) and WATE (=water)); MANUEL, YOU AGREE??  
   sp = dat[,5:25]
   
+  #warning
+  print("cdata has changed (no.quad included as column); columns do not match anymore")
+  
   # center coordinates
   xy.c = scale(xy, scale=FALSE)
   # calculate 3rd degree non-orthogonal polynomial on centered coordinates
