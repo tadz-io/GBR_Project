@@ -17,6 +17,17 @@ cdata =cdata[!(cdata$trans==14012 & cdata$image>140122529),]
 cdata = subset(cdata, !cdata$trans %in% c(10004,10005,10007,10009,14008,15011))
 rownames(cdata) = NULL
 
+# count number of quadrats per image
+# split dataset by image ID
+sdata = split(cdata, as.factor(cdata$image))
+nqd = as.numeric(lapply(sdata, function(x){
+  n = length(x[,1])
+  }))
+
+# add nqd to dataframe
+cdata$no.quad = nqd
+# reorder dataframe
+cdata = cdata[,c(1:4,28,5:27)]
 # aggregate data by unique images
 cdata = aggregate(.~ image, data=cdata, mean)
 cdata$id = NULL
