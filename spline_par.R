@@ -29,7 +29,8 @@ trendsurf = function(dat, nsamp, npoint)
   sp = dat[,5:25]
   
   #warning
-  print("cdata has changed (no.quad included as column); columns do not match anymore")
+  cat("cdata has changed (no.quad included as column); columns do not match anymore")
+  readline(prompt="Press [enter] to continue")
   
   # center coordinates
   xy.c = scale(xy, scale=FALSE)
