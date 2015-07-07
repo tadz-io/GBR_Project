@@ -2,7 +2,7 @@
 
 #####UNIVERSITY OF QUEENSLAND
 
-analysis
+analysis + scripts
 
 
 ## Transects
@@ -30,4 +30,9 @@ transects exluded from analysis
 	<td>cumulative distance < 500 m</td>
 </tr>
 </table>
+
+## Clustering
+Create filter and remove clusters where number of quadrants < 20 and where maximum distance < 35 m
+
+
 	
