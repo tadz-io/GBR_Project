@@ -12,20 +12,27 @@ trendsurf = function(dat, nsamp, npoint)
   require("ncf")
   
   # extract coordinates and project to UTM coordinate system
-  xy = dat[,3:4]
+  xy = dat[,c("lat", "lon")]
   coordinates(xy) = c("lon","lat")
   proj4string(xy) = CRS("+proj=longlat +datum=WGS84")
   xy = spTransform(xy, CRS("+proj=utm +zone=55 +datum=WGS84"))
   xy = xy@coords
   xy = data.frame(xy)
   
-  # create seperate dataframe for species (excluding catagories Unc (=unclear) and WATE (=water)); MANUEL, YOU AGREE??  
-  sp = dat[,5:25]
+  # create seperate dataframe for species (excluding catagories WATE (=water))  
+  group =   c("ACR-BRA", "ACR-HIP", "ACR-OTH", "ACR-PE",
+              "ACR-TCD", "ALC-SF", "CCA", "DSUB",
+              "FAV-MUS", "GORG", "MALG", "OTH-HC",
+              "OTH-SF", "OTH-SINV", "POCI",
+              "POR-BRA", "POR-ENC", "POR-MASS",
+              "Sand", "Turf", "Turfsa")
+  
+  sp = dat[,group]
   
   # center coordinates
   xy.c = scale(xy, scale=FALSE)
   # calculate 3rd degree non-orthogonal polynomial on centered coordinates
-  xy.poly = poly(as.matrix(xy.c), degree=3, raw=TRUE)
+  xy.poly = poly(as.matrix(xy.c), degree = 3, raw = TRUE)
   colnames(xy.poly) = c("X", "X2", "X3", "Y", "XY", "X2Y", "Y2", "XY2", "Y3")
   
   # hellinger transformation of cover data
@@ -65,13 +72,18 @@ trendsurf = function(dat, nsamp, npoint)
   sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])) # or only selecting lc scores of significant RDA axis???
   
   # produce spline correlogram
-  spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", filter=TRUE, save = TRUE, resamp = nsamp, npoints = npoint)
+  spline = spline.correlog(xy$lon, xy$lat, sp.h.det,
+                           type = "boot",
+                           filter = TRUE,
+                           save = TRUE,
+                           xmax = 500,
+                           resamp = nsamp, npoints = npoint)
   
   # plot spline [optional]
-  plot(spline)
+  # plot(spline)
   
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  output = data.frame(trans = dat$trans[1], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept, na.rm = TRUE), sd = sd(spline$boot$boot.summary$x.intercept, na.rm = TRUE))
+  # output = data.frame(trans = dat$trans[1], x.intercept = spline$real$x.intercept, mean = mean(spline$boot$boot.summary$x.intercept, na.rm = TRUE), sd = sd(spline$boot$boot.summary$x.intercept, na.rm = TRUE))
   
   #remove sp.h from global environment
   rm(sp.h)
