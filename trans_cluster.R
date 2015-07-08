@@ -131,11 +131,15 @@ qmin = 30
 
 # select images of clusters that meet requirements
 clust.sel = clust.seq[clust.seq$no.quad > qmin & clust.seq$dmax > dmin,]
-# match
+# match and bind cluster-id to cdata
 cldata = cbind(clust.id = clust.sel$id,
                cdata[cdata$image %in% clust.sel$image,])
 
 rownames(cldata) = NULL
+
+# aggregate data within cluster
+
+cladata = aggregate(. ~ clust.id, data = cldata, FUN = mean)[,c(1,7:27)]
 
 # redundant
 # --------------------------------------------------------
