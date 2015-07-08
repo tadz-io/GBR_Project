@@ -139,7 +139,7 @@ rownames(cldata) = NULL
 
 # aggregate data within cluster
 
-cladata = aggregate(. ~ clust.id, data = cldata, FUN = mean)[,c(1,7:27)]
+cldata = aggregate(. ~ clust.id, data = cldata, FUN = mean)[,c(1,7:27)]
 
 # redundant
 # --------------------------------------------------------
