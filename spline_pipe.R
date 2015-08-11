@@ -5,7 +5,7 @@ rm(list = ls())
 cdata = readRDS("cdata.rds")
 
 # set spline parameters
-nsamp = 1000
+nsamp = 200
 npoint = 300
 
 # random sample transects for analysis
@@ -82,9 +82,9 @@ sp.h.det = resid(lm(as.matrix(sp.h) ~ ., data=as.data.frame(xy.poly)[,poly.sel])
 # produce spline correlogram
 spline = spline.correlog(xy$lon, xy$lat, sp.h.det,
                          type = "boot",
-                         filter = TRUE,
+                         filter = FALSE,
                          save = TRUE,
-                         xmax = 500,
+                         xmax = 300,
                          resamp = nsamp, npoints = npoint)
 
 # plot spline [optional]
@@ -97,4 +97,4 @@ spline = spline.correlog(xy$lon, xy$lat, sp.h.det,
 rm(sp.h)
 
 # save output
-saveRDS(spline, file="spline.rds")
+saveRDS(spline, file="spline_noFilter.rds")
