@@ -9,7 +9,7 @@ trendsurf = function(dat, nsamp, npoint)
 {
   # surpress output to terminal
   # sink("log.txt")
-  sink("/dev/null") 
+  # sink("/dev/null") 
   
   # libraries
   require("sp")
@@ -18,19 +18,26 @@ trendsurf = function(dat, nsamp, npoint)
   require("ncf")
   
   # extract coordinates and project to UTM coordinate system
-  xy = dat[,3:4]
+  xy = dat[,c("lat", "lon")]
   coordinates(xy) = c("lon","lat")
   proj4string(xy) = CRS("+proj=longlat +datum=WGS84")
   xy = spTransform(xy, CRS("+proj=utm +zone=55 +datum=WGS84"))
   xy = xy@coords
   xy = data.frame(xy)
   
-  # create seperate dataframe for species (excluding catagories Unc (=unclear) and WATE (=water)); MANUEL, YOU AGREE??  
-  sp = dat[,5:25]
+  # create seperate dataframe for species (excluding catagories WATE (=water))  
+  group =   c("ACR-BRA", "ACR-HIP", "ACR-OTH", "ACR-PE",
+              "ACR-TCD", "ALC-SF", "CCA", "DSUB",
+              "FAV-MUS", "GORG", "MALG", "OTH-HC",
+              "OTH-SF", "OTH-SINV", "POCI",
+              "POR-BRA", "POR-ENC", "POR-MASS",
+              "Sand", "Turf", "Turfsa")
   
-  #warning
-  cat("cdata has changed (no.quad included as column); columns do not match anymore")
-  readline(prompt="Press [enter] to continue")
+  sp = dat[,group]
+  
+  # warning
+  # cat("cdata has changed (no.quad included as column); columns do not match anymore")
+  # readline(prompt="Press [enter] to continue")
   
   # center coordinates
   xy.c = scale(xy, scale=FALSE)
@@ -78,21 +85,25 @@ trendsurf = function(dat, nsamp, npoint)
   rm(sp.h)
   
   # produce spline correlogram
-  spline = spline.correlog(xy$lon, xy$lat, sp.h.det, type="boot", resamp = nsamp, npoints = npoint)
+  spline = spline.correlog(xy$lon, xy$lat, sp.h.det,
+                           type = "boot",
+                           filter = FALSE,
+                           save = TRUE,
+                           xmax = 500,
+                           resamp = nsamp, npoints = npoint)
   
   # output of lowest x intercept of spline function, mean + standard dev of lowest x intercept of bootstrap results per transect
-  
   output = list(trans       = dat$trans[1],
                 x.intercept = spline$real$x.intercept,
                 bootint     = spline$boot$boot.summary$x.intercept)
   
   # undo surpression of output
-  sink()
+  # sink()
   
   # output transect number
   cat("Finished transect:", dat$trans[1],"\n")
   # return output
-  return(output.m)
+  return(output)
 }
 
 # load casted GBR dataset
@@ -114,7 +125,7 @@ threads = 1
 sdata = split(cdata, as.factor(cdata$trans))
 # apply trendsurf in parallel
 res =  mclapply(sdata,
-       trendsurf, nsamp = 10, npoint = 300,
+       trendsurf, nsamp = 1000, npoint = 300,
        mc.cores = threads,
        mc.preschedule = FALSE,
        mc.set.seed = TRUE)
