@@ -3,7 +3,7 @@ library(rgdal)
 library(data.table)
 library(dplyr)
 
-# load function to calculate euclidean distance between consequtive images
+# load function to calculate euclidean distance between consecutive images
 source("/Users/tadzio/Documents/UQProject/scripts/eudist.R")
 
 #split dataset per transect
