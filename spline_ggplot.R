@@ -22,35 +22,49 @@ library(ggplot2)
 # spline plot transect #10001
 p.t10001 = ggplot(dat.t10001, aes(x = x, y = y)) +
   geom_abline(intercept = 0, slope = 0, size=0.3) +
-  geom_vline(xintercept = dat.t10001$x[14], size = 0.2, colour="black", linetype="longdash") +
-  geom_vline(xintercept = dat.t10001$x[21], size = 0.2, colour="black", linetype="longdash") +
+  geom_vline(xintercept = dat.t10001$x[15], size = 0.2, colour="black", linetype="longdash") +
+  geom_vline(xintercept = dat.t10001$x[23], size = 0.2, colour="black", linetype="longdash") +
   geom_ribbon(aes(ymin = q25, ymax = q975), alpha=0.3) +
-  geom_line(colour="orange1") +
+  geom_line(colour="black") +
   geom_line(aes(y = q975), alpha=0.5) +
   geom_line(aes(y = q25), alpha=0.5) +
   scale_y_continuous(limits = c(-.15,.4)) +
   scale_x_discrete(limit = c(seq(0,650,100))) +
-  coord_cartesian(xlim = c(0,688)) +
+  coord_cartesian(xlim = c(1,500)) +
   theme_bw() +
   theme(axis.line = element_line(size=0.3, colour="black"),
-        axis.line.x = element_blank()) +
-  labs(x = "distance (m)", y = "spatial correlation")
+        axis.line.x = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)) +
+  labs(x = "distance (m)", y = "spatial autocorrelation")
 p.t10001
+
+# save in eps format
+# need to specify cairo device for transparency support in graphics
+ggsave("spline_ggplot_t10001_manu.eps", device=cairo_ps)
 
 # spline plot transect #10008
 p.t10008 = ggplot(dat.t10008, aes(x = x, y = y)) +
   geom_abline(intercept = 0, slope = 0, size=0.3) +
-  geom_vline(xintercept = dat.t10008$x[10], size = 0.2, colour="black", linetype="longdash") +
-  geom_vline(xintercept = dat.t10008$x[22], size = 0.2, colour="black", linetype="longdash") +
+  geom_vline(xintercept = dat.t10008$x[18], size = 0.2, colour="black", linetype="longdash") +
+  geom_vline(xintercept = dat.t10008$x[61], size = 0.2, colour="black", linetype="longdash") +
   geom_ribbon(aes(ymin = q25, ymax = q975), alpha=0.3) +
-  geom_line(colour="orange1") +
+  geom_line(colour="black") +
   geom_line(aes(y = q975), alpha=0.5) +
   geom_line(aes(y = q25), alpha=0.5) +
   scale_y_continuous(limits = c(-.15,.4)) +
   scale_x_discrete(limit = c(seq(0,650,100))) +
-  coord_cartesian(xlim = c(0,688)) +
+  coord_cartesian(xlim = c(0,500)) +
   theme_bw() +
   theme(axis.line = element_line(size=0.3, colour="black"),
-        axis.line.x = element_blank()) +
-  labs(x = "distance (m)", y = "spatial correlation")
+        axis.line.x = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)) +
+  labs(x = "distance (m)", y = "spatial autocorrelation")
 p.t10008
+
+# save in eps format
+# need to specify cairo device for transparency support in graphics
+ggsave("spline_ggplot_t10008_manu.eps", device=cairo_ps)
