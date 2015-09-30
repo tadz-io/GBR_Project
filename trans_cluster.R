@@ -48,7 +48,7 @@ clust.seq = lapply(sdata, int = d, function(x, int){
     no.quad = sum(y$no.quad)
     
     # define output
-    list(images = y$image,
+    list(image = y$image,
          no.img = no.img,
          no.quad = no.quad,
          dmax = dmax)
@@ -84,7 +84,7 @@ clust.hrc = lapply(sdata, int =d, function(x, int){
     no.quad = sum(w$no.quad)
     
     # define output
-    list(images = w$image,
+    list(image = w$image,
          no.img = no.img,
          no.quad = no.quad,
          dmax = dmax)
@@ -131,24 +131,26 @@ qmin = 30
 
 # select images of clusters that meet requirements
 clust.sel = clust.seq[clust.seq$no.quad > qmin & clust.seq$dmax > dmin,]
-# match and bind cluster-id to cdata
-cldata = cbind(clust.id = clust.sel$id,
-               cdata[cdata$image %in% clust.sel$image,])
 
-rownames(cldata) = NULL
+# create species matrix and match with cluster id
+# first create list of variables to be extracted from dataset (cdata)
+group =   c("ACR-BRA", "ACR-HIP", "ACR-OTH", "ACR-PE",
+            "ACR-TCD", "ALC-SF", "CCA", "DSUB",
+            "FAV-MUS", "GORG", "MALG", "OTH-HC",
+            "OTH-SF", "OTH-SINV", "POCI",
+            "POR-BRA", "POR-ENC", "POR-MASS",
+            "Sand", "Turf", "Turfsa")
 
-# aggregate data within cluster
+# assign id to species matrix (obtained from cdata) by merging clust.sel and cdata df's
+sp = as.data.frame(merge(clust.sel, cdata, by = "image"))[,c("id", group)]
 
-cldata = aggregate(. ~ clust.id, data = cldata, FUN = mean)[,c(1,7:27)]
-
-# redundant
-# --------------------------------------------------------
-# fetch method from id name and create boolean
-sc.id = 1:dim(cl.data)[1] %in% grep("sc", cl.data$id)
-hc.id = 1:dim(cl.data)[1] %in% grep("hc", cl.data$id)
-
-# assign method to column
-cl.data$clust[sc.id] = "sc"
-cl.data$clust[hc.id] = "hc"
-
-
+# match and bind cluster-id to environmental vars
+# same procedure as above
+env = as.data.frame(merge(clust.sel, env, by = "image"))[,c("id", "cots", "cyclo")] 
+  
+# aggregate data according to cluster ID
+# using mean to summarize data within clusters
+sp.clust = aggregate(. ~ id, data = sp, FUN = mean)
+# need to specify action to be taken when encountering NAs in data
+# na.pass passes data unchanged when encountering NAs
+env.clust = aggregate(. ~ id, data = env, FUN = mean, na.action = na.pass)
