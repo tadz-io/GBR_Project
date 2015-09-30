@@ -2,6 +2,7 @@
 # boxplot of spline 
 # script requires output from spline_par.R
 #*********************************************************************************************************
+library(data.table)
 
 # import csv containing transect id - reef name - region
 # file: trans_region.csv
@@ -18,7 +19,7 @@ mGBR = mGBR[1:131,]
 mGBR$section[mGBR$sub_region %in% "Far Northern"] = "Northern GBR"
 mGBR$section[mGBR$sub_region %in% c("Central", "Cairns")] = "Central GBR"
 mGBR$section[mGBR$reef_name %in% c("Heron Island Reef","One Tree Island", "Wilson Island Reef")] = "Southern GBR"
-mGBR$section[mGBR$reef_name %in% c("Osprey Reef","Flinders Reef", "Holmes Reef")] = "Coral Sea"
+mGBR$section[mGBR$reef_name %in% c("Osprey Reef","Flinders Reef", "Holmes Reef")] = "CSCMR"
 
 # plot new output from spline_par.R
 library(ggplot2)
@@ -36,22 +37,33 @@ res.df = rbindlist(lapply(res, function(x){
 # match transect id with geographical area
 res.df$section = mGBR$section[match(res.df$trans, mGBR$trans_id)]
 
+# order df according to section
+res.order.df = res.df[order(res.df$section),]
+
 # plot
-p = ggplot(res.df, aes(x = as.factor(trans), y = bootint)) +   
+p = ggplot(res.order.df, aes(x = factor(trans, levels = unique(res.order.df$trans)), y = bootint, fill = as.factor(section))) +   
   geom_abline(intercept = mean(res.df$bootint, na.rm = TRUE), slope= 0, size=0.5, linetype="longdash", colour="red") +
-  geom_boxplot(fill = "orange", colour = "black", alpha=0.8, outlier.shape = NA) +
+  geom_abline(intercept = quantile(res.df$bootint, probs = 0.95, na.rm = TRUE), slope= 0, size=0.5, linetype="longdash", colour="red") +
+  geom_boxplot(colour = "black", lwd=0.1, alpha=0.8, outlier.shape = NA) +
   scale_y_continuous(limits = c(-10,150)) +
-  facet_grid(. ~ section, scales="free", space="free") +
+  #facet_grid(. ~ section, scales="free", space="free") +
   #facet_wrap(~section, scales="free", drop = TRUE, nrow=1) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
         panel.background = element_blank(), axis.line = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=0.5),
-        axis.text.x = element_text(colour = "black", angle = 90, hjust = 1),
-        axis.text.y = element_text(colour = "black"))
-     
-labs = paste("Spatial range (m) \n (x-intercept of spline correlogram)")
-p + labs(x = "transect ID", y = labs) + theme(axis.title = element_text(size = 12, face="bold"))
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        # axis.text.x = element_text(colour = "black", angle = 90, hjust = 1),
+        axis.text.y = element_text(colour = "black", size = 12)) 
 
+# add labels for faceted plot     
+labs = paste("Spatial range (m) \n (spline intercept)")
+p + labs(x = "transect", y = labs) + theme(axis.title = element_text(size = 14)) +
+  scale_fill_discrete(name = "Subregion")
+
+# save in eps format
+# need to specify cairo device for transparency support in graphics
+ggsave("GBR_sp_range_manu.eps", device=cairo_ps)
 
 # script below is redundant; serves as a note how to apply 'lapply' function
 # extract data from nested list
