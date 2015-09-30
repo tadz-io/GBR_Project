@@ -74,7 +74,7 @@ trendsurf = function(dat, nsamp, npoint)
   # produce spline correlogram
   spline = spline.correlog(xy$lon, xy$lat, sp.h.det,
                            type = "boot",
-                           filter = TRUE,
+                           filter = FALSE,
                            save = TRUE,
                            xmax = 500,
                            resamp = nsamp, npoints = npoint)
