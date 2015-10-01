@@ -37,6 +37,19 @@ plot(CS.dry, add = TRUE)
 
 # TO DO: exclude dry reef pixels from calculation of slope and aspect!
 # MANUEL, ANY SUGGESTIONS?
+for(i in 1:length(unique(cdata$trans))){
+  # create bounding box, with buffer @ 0.01 deg, for transect and crop bathymetry data
+  bbox = bbox(SpatialPoints(cdata[cdata$trans==unique(cdata$trans)[i], c(4,3)],
+                            proj4string = CRS("+proj=longlat +datum=WGS84"))) + c(-0.01,-0.01,0.01,0.01)
+  title(unique(cdata$trans[i]))
+  image(crop(bath, extent(bbox)))
+  plot(SpatialPoints(cdata[cdata$trans==unique(cdata$trans)[i], c(4,3)],
+                     proj4string = CRS("+proj=longlat +datum=WGS84")), add = T)
+
+}
+image(terrain(crop(bath, extent(bbox(SpatialPoints(cdata[cdata$trans==10008, c(4,3)], proj4string = CRS("+proj=longlat +datum=WGS84")))+c(-0.01,-0.01,0.01,0.01))), opt = 'slope', unit = 'tangent', neighbors = 8))
+# replace values within dry reef polygons (GBR.dry and CS.dry) with NaNs
+
 
 # calculate slope and aspect from bathymetry data
 slope = terrain(bath, opt = 'slope', unit = 'tangent', neighbors = 8)
