@@ -17,9 +17,7 @@ GBR.dry = readOGR(dsn = "/Users/tadzio/Documents/UQProject/data/Bathymetry\ data
 CS.dry = readOGR(dsn = "/Users/tadzio/Documents/UQProject/data/Bathymetry\ data/3dgbr_geomorph/shape/", 
                  layer = "coralsea_dryreef")
 
-# plot bathymetry data and transects
-# check if they line-up
-
+# plot bathymetry data and transects; check if they line-up
 # first specify colormap
 library(RColorBrewer)
 cols = rev(colorRampPalette(brewer.pal(11, "Spectral"))(256))
@@ -28,36 +26,48 @@ image(crop(bath, extent(147.85, 147.92, -16.5,-16.4)),
       col = cols, 
       breaks = c(seq(-5000, -500, (4500/55)), seq(-75, 0, (75/200))))
 
-# plot transect points on top of bathymetry plot
-plot(SpatialPoints(cdata[, c(4,3)], proj4string = CRS("+proj=longlat +datum=WGS84")), add = TRUE, col="black")
+grad = lapply(split(cdata[, c(1:4)], as.factor(cdata$trans)), function(x){
+ 
+  coordinates(x) = c("lon", "lat")
+  proj4string(x) = CRS("+proj=longlat +datum=WGS84")
+  
+  # check of SpatialPoints overlap with GBR dry-reef polys
+  if (length(PolysOver(x, GBR.dry)) != 0){
+    dryPoly = PolysOver(x, GBR.dry)
+  } 
+  # now check if SpatialPoints overlap with CS dry-reef polys
+  # in case of no overlap PolysOver returns an empty SpPolygons object
+  else {
+    dryPoly = PolysOver(x, CS.dry)
+  }
+  
+  pbox = bbox(x) + c(-0.02,-0.02,0.02,0.02)
+  bath.crop = crop(bath, pbox)
+  # ************
+  # for plotting
+  # ************
+  #   plot(terrain(bath.crop, opt="slope", unit = "tangent", neighbors = 8), main = x@data$trans[1])
+  #   plot(dryPoly, add = T)
+  #   plot(x, add = T)
+  
+  # set dry reef pixels to NaNs
+  bath.crop[dryPoly] = NaN
+  # plot(terrain(bath.crop, opt="slope", unit = "tangent", neighbors = 8), main = x@data$trans[1])
+  
+  # calculate aspect and slope
+  aspect = extract(terrain(bath.crop, opt = "aspect", unit = "radians", neighbors = 8), x, method = "simple", sp = T)@data
+  slope = extract(terrain(bath.crop, opt = "slope", unit = "tangent", neighbors = 8), x, method = "simple", sp = T)@data
+  
+  return(list(image = aspect$image,
+              aspect = aspect$aspect,
+              slope = slope$slope))
 
-# plot dryreef shape files on top of bathymetry data
-plot(GBR.dry, add = TRUE)
-plot(CS.dry, add = TRUE)
-
-# TO DO: exclude dry reef pixels from calculation of slope and aspect!
-# MANUEL, ANY SUGGESTIONS?
-for(i in 1:length(unique(cdata$trans))){
-  # create bounding box, with buffer @ 0.01 deg, for transect and crop bathymetry data
-  bbox = bbox(SpatialPoints(cdata[cdata$trans==unique(cdata$trans)[i], c(4,3)],
-                            proj4string = CRS("+proj=longlat +datum=WGS84"))) + c(-0.01,-0.01,0.01,0.01)
-  title(unique(cdata$trans[i]))
-  image(crop(bath, extent(bbox)))
-  plot(SpatialPoints(cdata[cdata$trans==unique(cdata$trans)[i], c(4,3)],
-                     proj4string = CRS("+proj=longlat +datum=WGS84")), add = T)
-
-}
-image(terrain(crop(bath, extent(bbox(SpatialPoints(cdata[cdata$trans==10008, c(4,3)], proj4string = CRS("+proj=longlat +datum=WGS84")))+c(-0.01,-0.01,0.01,0.01))), opt = 'slope', unit = 'tangent', neighbors = 8))
-# replace values within dry reef polygons (GBR.dry and CS.dry) with NaNs
+})
 
 
-# calculate slope and aspect from bathymetry data
-slope = terrain(bath, opt = 'slope', unit = 'tangent', neighbors = 8)
-aspect = terrain(bath, opt = 'aspect', unit = 'radians', neighbors = 8)
 
-# set coordinates of sampling locations
-samp = data.frame(image = cdata$image, lon = cdata$lon, lat = cdata$lat)
-coordinates(samp) = c("lon", "lat")
+
+
 
 # geomorphology -----------------------------------------
 # determine geomorphology (e.g. barrier reef or atoll)
@@ -97,6 +107,11 @@ plot(SpatialPoints(geomorph[geomorph$morph == "Barrier", c(4,3)],
 geomorph = geomorph[,c(-2,-3,-4)]
 
 # extract environmental variables -----------------------------------------
+
+# set coordinates of sampling locations
+samp = data.frame(image = cdata$image, lon = cdata$lon, lat = cdata$lat)
+coordinates(samp) = c("lon", "lat")
+
 # extract environmental vars for every sampling location
 cyclo.ex = data.frame(extract(cyclo, samp, method="simple", sp = T)@data)
 cots.ex = data.frame(extract(cots, samp, method="simple", sp = T)@data)
