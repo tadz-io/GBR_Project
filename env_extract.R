@@ -64,8 +64,10 @@ grad = lapply(split(cdata[, c(1:4)], as.factor(cdata$trans)), function(x){
 
 })
 
-
-
+# now bind list by rows
+library(data.table)
+grad = rbindlist(grad) 
+# to do: take sine and cosine of aspect; see code below
 
 
 
