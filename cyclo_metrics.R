@@ -104,23 +104,32 @@ cycl.mean = calc(cyclStack, function(x){
 #   {browser()}
   
   if(any(th, na.rm = T)){
-  # get id of cyclones
-  cycl.id =  sapply(na.omit(names(x)[th]), FUN = match, table = cycl.data$Name)
-  tp = as.Date("2012.11.1", format = "%Y.%m.%d")
-  lb = as.Date("1980.11.1", format = "%Y.%m.%d")
- 
-  # create logical vector
-  # select cyclones that happenend between lb and tp
-  logi = cycl.data$Date.end[cycl.id] < tp & cycl.data$Date.end[cycl.id] >= lb
-  # get names of these cyclones
-  cycl.names = cycl.data$Name[cycl.id[logi]]
-  # return mean values of these cyclones
-  return(mean(x[cycl.names]))
+    
+    # get id of cyclones
+    cycl.id =  sapply(na.omit(names(x)[th]), FUN = match, table = cycl.data$Name)
+    tp = as.Date("2012.11.1", format = "%Y.%m.%d")
+    lb = as.Date("2002.11.1", format = "%Y.%m.%d")
+    
+    # create logical vector
+    # select cyclones that happenend between lb and tp
+    logi = cycl.data$Date.end[cycl.id] < tp & cycl.data$Date.end[cycl.id] >= lb
+    
+    if(any(logi)){
+      # get names of these cyclones
+      cycl.names = cycl.data$Name[cycl.id[logi]]
+      # return mean values of these cyclones
+      return(mean(x[cycl.names]))
+    }
+    
+    else{
+      return(NA)
+    }
   }
+  
   else{
     return(NA)
-  }
- 
+    }
+
 })
 
 
