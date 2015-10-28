@@ -53,7 +53,7 @@ cots.prob = calc(cots, function(x){
 
 # calculate time since last cots event
 cots.time = calc(cots, function(x){
-
+  
   # set threshold again
   th = (x>=1)
 
@@ -61,17 +61,16 @@ cots.time = calc(cots, function(x){
   # here we only set year since no exact date for cots data is specified
   tp = 2012
   
-  if(sum(th, na.rm = T)>0){
-    # get cyclone names for which condition "th" is true
+  if(any(th, na.rm = T)){
+  
+    # get id names for which condition "th" is true
     # then match names with lookup table to get row id
     cots.id =  sapply(na.omit(names(x)[th]), FUN = match, table = cots.data$id)
     # create var with end dates of cyclone
     cots.dates = cots.data$date[cots.id]
-    if(sum(cots.dates==1982)>0){
-      browser()
-    }
+  
     # calculate time since most recent event
-    if(sum(cots.dates<tp) != 0){
+    if(any(cots.dates<tp)){
       
       return(tp-max(cots.dates[cots.dates<tp]))
     }
@@ -83,4 +82,43 @@ cots.time = calc(cots, function(x){
   else{
     return(NA)
   }
+})
+
+#
+cots.mean = calc(cots, function(x){
+  
+  th = (x>0)
+  # invoke browser
+  #   if(sum(th, na.rm = T)>1)
+  #   {browser()}
+  
+  if(any(th, na.rm = T)){
+    
+    # get id of cots
+    cots.id =  sapply(na.omit(names(x)[th]), FUN = match, table = cots.data$id)
+    # specify time interval over which to calculate mean intensity
+    tp = 2012
+    lb = 2002
+    
+    # create logical vector
+    # select cots that happenend between lb and tp
+    logi = cots.data$date[cots.id] < tp & cots.data$date[cots.id] >= lb
+    
+    if(any(logi, na.rm = T)){
+      
+      # get id names of these cots events
+      cots.names = cots.data$id[cots.id[logi]]
+      # return mean values of these cyclones
+      return(mean(x[cots.names]))
+    }
+    else{
+   
+      return(NA)
+    }
+ 
+  }
+  else{
+    return(NA)
+  }
+  
 })
