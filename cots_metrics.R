@@ -84,7 +84,7 @@ cots.time = calc(cots, function(x){
   }
 })
 
-#
+# calculate mean intensity over last 10 yrs
 cots.mean = calc(cots, function(x){
   
   th = (x>0)
