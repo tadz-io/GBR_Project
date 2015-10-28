@@ -47,7 +47,7 @@ cycl.prob = calc(cyclStack, function(x){
 
 # import list with dates of cyclones
 cycl.data = read.csv(file.choose(), header = T, sep = ";")
-
+cycl.data$Name = as.character(cycl.data$Name)
 # change names in df so that they match names in rasterstack
 cycl.data$Name[cycl.data$Name == "Nathan" & cycl.data$Year.start == 2015] = "Nathan15"
 cycl.data$Name[cycl.data$Name == "Ita" & cycl.data$Year.start == 2014] = "Ita14"
@@ -64,21 +64,22 @@ cycl.data$Date.end = as.Date(cycl.data$Date.end, format = "%Y.%m.%d")
 
 # calculate time since last cyclone event
 cycl.time = calc(cyclStack, function(x){
-browser()
+  
   # set threshold again
-  th = na.omit(x>=1)
+  th = (x>=1)
+
   # set timepoint from which to calculate time interval to last event
   # c(year, month)
   tp = as.Date("2012.11.1", format = "%Y.%m.%d")
   
-  if(sum(th, na.rm = T)>0){
+  if(any(th, na.rm = T)){
     # get cyclone names for which condition "th" is true
     # then match names with lookup table to get row id
-    cycl.id =  sapply(names(x)[th], FUN = match, table = cycl.data$Name)
+    cycl.id =  sapply(na.omit(names(x)[th]), FUN = match, table = cycl.data$Name)
     # create var with end dates of cyclone
     cycl.dates = cycl.data$Date.end[cycl.id]
     # calculate time since most recent event
-    if(sum(cycl.dates<tp) != 0){
+    if(any(cycl.dates<tp)){
       # continue here:
       # to calc. mean for last 10 yrs lookup dates within interval
       # then lookup cyclone intensity that match dates that are within interval
@@ -97,14 +98,14 @@ browser()
 
 cycl.mean = calc(cyclStack, function(x){
   
-  th = na.omit(x>=1)
+  th = (x>=1)
   # invoke browser
 #   if(sum(th, na.rm = T)>1)
 #   {browser()}
   
-  if(sum(th, na.rm = T)>0){
+  if(any(th, na.rm = T)){
   # get id of cyclones
-  cycl.id =  sapply(names(x)[th], FUN = match, table = cycl.data$Name)
+  cycl.id =  sapply(na.omit(names(x)[th]), FUN = match, table = cycl.data$Name)
   tp = as.Date("2012.11.1", format = "%Y.%m.%d")
   lb = as.Date("1980.11.1", format = "%Y.%m.%d")
  
