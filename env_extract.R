@@ -3,8 +3,6 @@ library("raster")
 library("sp")
 
 # import environmental data as raster
-cots = raster(file.choose()) # crown of thorns data
-cyclo = raster(file.choose()) # cyclone data
 bath = raster(file.choose()) # bathymetry data
 
 # slope and aspect ---------------------------------------------
@@ -56,7 +54,7 @@ grad = lapply(split(cdata[, c(1:4)], as.factor(cdata$trans)), function(x){
   
   # calculate aspect and slope
   aspect = extract(terrain(bath.crop, opt = "aspect", unit = "radians", neighbors = 8), x, method = "simple", sp = T)@data
-  slope = extract(terrain(bath.crop, opt = "slope", unit = "tangent", neighbors = 8), x, method = "simple", sp = T)@data
+  slope = extract(terrain(bath.crop, opt = "slope", unit = "degrees", neighbors = 8), x, method = "simple", sp = T)@data
   
   return(list(image = aspect$image,
               aspect = aspect$aspect,
@@ -67,9 +65,9 @@ grad = lapply(split(cdata[, c(1:4)], as.factor(cdata$trans)), function(x){
 # now bind list by rows
 library(data.table)
 grad = rbindlist(grad) 
-# to do: take sine and cosine of aspect; see code below
-
-
+# take sine and cosine of aspect; (see Wilson et al 2007)
+grad$aspect.cos = cos(grad$aspect)
+grad$aspect.sin = sin(grad$aspect)
 
 # geomorphology -----------------------------------------
 # determine geomorphology (e.g. barrier reef or atoll)
@@ -100,7 +98,7 @@ geomorph$morph[geomorph$trans %in% mGBR[mGBR$section != "CSCMR",1]] = "Barrier"
 image(bath, col = cols, breaks = c(seq(-5000, -500, (4500/55)), seq(-75, 0, (75/200))))
 # are transects indeed located on the barrier reef?
 # repeat for geomorph$morph = "Atoll
-plot(SpatialPoints(geomorph[geomorph$morph == "Barrier", c(4,3)], 
+plot(SpatialPoints(geomorph[geomorph$morph == "Atoll", c(4,3)], 
                    proj4string = CRS("+proj=longlat +datum=WGS84")), 
      add = TRUE, 
      col="black")
@@ -114,6 +112,35 @@ geomorph = geomorph[,c(-2,-3,-4)]
 samp = data.frame(image = cdata$image, lon = cdata$lon, lat = cdata$lat)
 coordinates(samp) = c("lon", "lat")
 
+# get geotiffs
+gtiffs = list.files(path = "/Users/tadzio/Documents/UQProject/data/vars_geotiffs", pattern = "\\.tif$",
+                    recursive = T, full.names = T)
+
+#init environmental df
+env = as.data.frame(matrix(NA, ncol = length(gtiffs)+1, nrow = length(samp)))
+env[,1] = samp@data$image
+colnames(env)[1] = "image"
+for(i in 1:length(gtiffs)){
+
+  # get var name
+  varname = sub(".*/([a-z].*).tif", "\\1", gtiffs[i])
+  # laod raster
+  rfile = raster(gtiffs[i])
+  # extract values according to coordinates in "samp"
+  var = extract(rfile, samp, method = "simple", sp = T)@data
+  # sort "var" so it matches the sequence of images in "env"
+  # this is probably not necessary; 
+  var = var[match(env$image, var$image),]
+  env[,i+1] = var[,2]
+  colnames(env)[i+1] = varname
+}
+
+
+for(i in 1:length(gtiffs)){
+  browser()
+  rfile = raster(gtiffs[i])
+  env = extract(rfile, samp, method = "simple", sp = T)@data
+}
 # extract environmental vars for every sampling location
 cyclo.ex = data.frame(extract(cyclo, samp, method="simple", sp = T)@data)
 cots.ex = data.frame(extract(cots, samp, method="simple", sp = T)@data)
