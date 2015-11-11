@@ -30,6 +30,7 @@ library(ggplot2)
 # where xxxx = transect number
 
 # convert nested list (=output spline_par.R) to long format dataframe
+res = readRDS(file.choose()) # filename: sp_autocorr.rds
 res.df = rbindlist(lapply(res, function(x){
   as.data.frame(x)  
 }))
@@ -38,32 +39,39 @@ res.df = rbindlist(lapply(res, function(x){
 res.df$section = mGBR$section[match(res.df$trans, mGBR$trans_id)]
 
 # order df according to section
-res.order.df = res.df[order(res.df$section),]
+res.order.df = res.df[order(res.df$section, decreasing = F),]
 
 # plot
 p = ggplot(res.order.df, aes(x = factor(trans, levels = unique(res.order.df$trans)), y = bootint, fill = as.factor(section))) +   
-  geom_abline(intercept = mean(res.df$bootint, na.rm = TRUE), slope= 0, size=0.5, linetype="longdash", colour="red") +
-  geom_abline(intercept = quantile(res.df$bootint, probs = 0.95, na.rm = TRUE), slope= 0, size=0.5, linetype="longdash", colour="red") +
-  geom_boxplot(colour = "black", lwd=0.1, alpha=0.8, outlier.shape = NA) +
+  geom_abline(intercept = mean(res.df$bootint, na.rm = TRUE), slope= 0, size=0.5, linetype="solid", colour="red") +
+  geom_abline(intercept = quantile(res.df$bootint, probs = 0.95, na.rm = TRUE), slope= 0, size=0.5, linetype="dotdash", colour="red") +
+  geom_boxplot(colour = "black", lwd=0.2, alpha=0.8, outlier.shape = NA) +
   scale_y_continuous(limits = c(-10,150)) +
   #facet_grid(. ~ section, scales="free", space="free") +
   #facet_wrap(~section, scales="free", drop = TRUE, nrow=1) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-        panel.background = element_blank(), axis.line = element_blank(),
+        panel.background = element_rect(fill = "white", colour = "white"), axis.line = element_line(size=0.3, colour="black"),
         panel.border = element_rect(colour = "black", fill=NA, size=0.5),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        # axis.text.x = element_text(colour = "black", angle = 90, hjust = 1),
-        axis.text.y = element_text(colour = "black", size = 12)) 
+        axis.text.x = element_text(colour = "black", angle = 90, hjust = 1),
+        axis.text.y = element_text(colour = "black", size = 18),
+        plot.background = element_rect(fill = "white", colour = "white")) 
 
 # add labels for faceted plot     
 labs = paste("Spatial range (m) \n (spline intercept)")
-p + labs(x = "transect", y = labs) + theme(axis.title = element_text(size = 14)) +
+p + labs(x = "transect", y = labs) + theme(axis.title = element_text(size = 14, colour = "black"),
+                                           legend.background = element_rect(fill = "white"),
+                                           legend.key = element_rect(fill = "white", colour = "white"),
+                                           legend.text = element_text(colour = "black")) +
   scale_fill_discrete(name = "Subregion")
+
+
+ 
 
 # save in eps format
 # need to specify cairo device for transparency support in graphics
-ggsave("GBR_sp_range_manu.eps", device=cairo_ps)
+ggsave("GBR_sp_range_manu_v2.png")#, device=cairo_ps)
 
 # script below is redundant; serves as a note how to apply 'lapply' function
 # extract data from nested list
