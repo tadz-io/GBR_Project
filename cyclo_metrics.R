@@ -66,7 +66,7 @@ cycl.data$Date.end = as.Date(cycl.data$Date.end, format = "%Y.%m.%d")
 cycl.time = calc(cyclStack, function(x){
   
   # set threshold again
-  th = (x>=1)
+  th = (x>12)
 
   # set timepoint from which to calculate time interval to last event
   # c(year, month)

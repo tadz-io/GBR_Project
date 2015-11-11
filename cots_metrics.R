@@ -43,7 +43,7 @@ for(i in 1:len){
 # calculate probability of cots event
 cots.prob = calc(cots, function(x){
   # set threshold
-  th = (x>1)
+  th = (x>=1)
   # calculate frequency
   freq = sum(th, na.rm = T)/len
   # calculate probability of occurence assuming poisson distr
