@@ -25,7 +25,10 @@ image(crop(bath, extent(147.85, 147.92, -16.5,-16.4)),
       breaks = c(seq(-5000, -500, (4500/55)), seq(-75, 0, (75/200))))
 
 grad = lapply(split(cdata[, c(1:4)], as.factor(cdata$trans)), function(x){
- 
+  # load functions
+  source("/Users/tadzio/Documents/UQProject/scripts/PolysOver.R")
+  source("/Users/tadzio/Documents/UQProject/scripts/overlap.R")
+  
   coordinates(x) = c("lon", "lat")
   proj4string(x) = CRS("+proj=longlat +datum=WGS84")
   
@@ -120,8 +123,8 @@ gtiffs = list.files(path = "/Users/tadzio/Documents/UQProject/data/vars_geotiffs
 env = as.data.frame(matrix(NA, ncol = length(gtiffs)+1, nrow = length(samp)))
 env[,1] = samp@data$image
 colnames(env)[1] = "image"
+# extract values from geotiffs
 for(i in 1:length(gtiffs)){
-
   # get var name
   varname = sub(".*/([a-z].*).tif", "\\1", gtiffs[i])
   # laod raster
@@ -129,29 +132,17 @@ for(i in 1:length(gtiffs)){
   # extract values according to coordinates in "samp"
   var = extract(rfile, samp, method = "simple", sp = T)@data
   # sort "var" so it matches the sequence of images in "env"
-  # this is probably not necessary; 
+  # this is probably not necessary; but doing it to make sure so rows are alligned properly
   var = var[match(env$image, var$image),]
   env[,i+1] = var[,2]
   colnames(env)[i+1] = varname
 }
 
-
-for(i in 1:length(gtiffs)){
-  browser()
-  rfile = raster(gtiffs[i])
-  env = extract(rfile, samp, method = "simple", sp = T)@data
-}
-# extract environmental vars for every sampling location
-cyclo.ex = data.frame(extract(cyclo, samp, method="simple", sp = T)@data)
-cots.ex = data.frame(extract(cots, samp, method="simple", sp = T)@data)
-slope.ex = data.frame(extract(slope, samp, method="simple", sp = T)@data)
-aspect.ex = data.frame(extract(aspect, samp, method="simple", sp = T)@data)
-# add sine and cosine of aspect to df
-aspect.ex$aspect.sin = sin(aspect.ex$aspect)
-aspect.ex$aspect.cos = cos(aspect.ex$aspect)
-
-colnames(cyclo.ex) = c("image", "cyclo")
-colnames(cots.ex) = c("image", "cots")
-
-# create df with environmental variables
-env.raw = data.frame(image=cyclo.ex$image, cyclo = cyclo.ex$cyclo, cots = cots.ex$cots)
+# sort "grad" and "geomorph" so it matches the sequence of images in "env"
+grad = grad[match(env$image, grad$image),]
+geomorph = geomorph[match(env$image, geomorph$image),]
+# add gradient and geomorph vars to env df
+env$slope = grad$slope
+env$aspect.sin = grad$aspect.sin
+env$aspect.cos = grad$aspect.cos
+env$morph = as.factor(geomorph$morph) 
