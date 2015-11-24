@@ -134,11 +134,11 @@ clust.sel = clust.seq[clust.seq$no.quad > qmin & clust.seq$dmax > dmin,]
 
 # create species matrix and match with cluster id
 # first create list of variables to be extracted from dataset (cdata)
-group =   c("ACR-BRA", "ACR-HIP", "ACR-OTH", "ACR-PE",
-            "ACR-TCD", "ALC-SF", "CCA", "DSUB",
-            "FAV-MUS", "GORG", "MALG", "OTH-HC",
-            "OTH-SF", "OTH-SINV", "POCI",
-            "POR-BRA", "POR-ENC", "POR-MASS",
+group =   c("ACR.BRA", "ACR.HIP", "ACR.OTH", "ACR.PE",
+            "ACR.TCD", "ALC.SF", "CCA", "DSUB",
+            "FAV.MUS", "GORG", "MALG", "OTH.HC",
+            "OTH.SF", "OTH.SINV", "POCI",
+            "POR.BRA", "POR.ENC", "POR.MASS",
             "Sand", "Turf", "Turfsa")
 
 # assign id to species matrix (obtained from cdata) by merging clust.sel and cdata df's
@@ -146,11 +146,12 @@ sp = as.data.frame(merge(clust.sel, cdata, by = "image"))[,c("id", group)]
 
 # match and bind cluster-id to environmental vars
 # same procedure as above
-env = as.data.frame(merge(clust.sel, env, by = "image"))[,c("id", "cots", "cyclo")] 
+env.m = as.data.frame(merge(clust.sel, env, by = "image"))[,c("id", colnames(env))] 
   
 # aggregate data according to cluster ID
 # using mean to summarize data within clusters
 sp.clust = aggregate(. ~ id, data = sp, FUN = mean)
 # need to specify action to be taken when encountering NAs in data
 # na.pass passes data unchanged when encountering NAs
-env.clust = aggregate(. ~ id, data = env, FUN = mean, na.action = na.pass)
+env.clust = aggregate(. ~ id, data = env.m, FUN = mean, na.rm = T, na.action = na.pass)
+env.clust$morph = as.factor(env.clust$morph)
