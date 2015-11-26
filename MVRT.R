@@ -47,23 +47,32 @@ for(i in 1:30){
 }
 
 # do k-fold cross-validation
-
 # to do: 
 # TURFSA + DSUB = TURF
 
+# plot terminal nodes
+# ---------------------------------------------------------------------------------
+# create tree
+ct.final = ctree(formula, data = m, controls = ctree_control(testtype = "Bonferroni",
+                                                             maxsurrogate = 0,
+                                                             maxdepth = 2))
 
-# giving mob function a try
-# ----------------------------
-mob1 = mob(CCA + ACR.BRA ~ cots_mean + cots_probMin| dhw_time , data = m, na.action = na.omit, model = linearModel, 
-           control = ctrl)
+# get id terminal nodes
+tNode = unique(where(ct.final))
+# init matrix for node predictions
+pNode = as.data.frame(matrix(nrow=length(tNode), ncol=length(ct.final@responses@variables)+1))
+colnames(pNode)[-1] = colnames(ct.final@responses@variables)
+colnames(pNode)[1] = "NodeID"
+# get predictions for every node
+for(i in 1:length(tNode)){
+  # browser()
+  pNode[i,1] = tNode[i]
+  pNode[i,-1] = nodePredict.ctree(ct.final, nodeID = tNode[i])
+}
 
-# mvpart
-# --------------
-library("mvpart")
-ct2 = mvpart(data.matrix(m[,1:21])~cots_mean + cots_probMax + cots_probMin + cots_time + cycl_mean + 
-               cycl_probMax + cycl_probMin + cycl_time + dhw_mean + 
-               dhw_probMax + dhw_probMin + dhw_time + sst_mean + sst_std + 
-               we_log + slope + aspect.sin + aspect.cos + morph,
-             data = m, xv = "lse", xval = 10, legend = T, bars = T, size = 6)
-plot(ct2)
-text(ct2, splits = T)
+#now plot output
+barplot(t(as.matrix(pNode[,-1])), 
+        beside = T,
+        col = cols, names.arg=rep(colnames(pNode)[-1], times = length(tNode)),
+        las = 2,
+        cex.names=0.5)
