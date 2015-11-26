@@ -9,9 +9,9 @@ CV.ctree = function(x,k,formula,maxsize){
   var = unlist(strsplit(as.character(formula)[2], split = ".[+]."))
   # init df for MSE
   cv.mse = data.frame(tree.size = rep(NA,maxsize*k),
-                      mse = rep(NA,maxsize*k))
-
-  # browser()
+                      mse = rep(NA,maxsize*k),
+                      r2 = rep(NA,maxsize*k))
+  browser()
   # size of dataset
   n = dim(x)[1]
   # create subset indices
@@ -29,16 +29,21 @@ CV.ctree = function(x,k,formula,maxsize){
       predict = predict(tree.train, newdata = x[set==j,])
       # convert list to matrix
       predict = matrix(unlist(predict), nrow = length(predict), byrow = T)
+      # observed values of test set
+      obs = m[which(set==j), var]
       # calculate MSE
-      mse = mean((predict-m[which(set==j), var])^2)
+      mse = mean((predict-obs)^2)
+      # calculate total sum of squares (tss) and residual sum of squares (rss)
+      tss = sum((obs-mean(as.matrix(obs)))^2)
+      rss = sum((predict-obs)^2)
+      # calculate R2
+      r2 = 1-rss/tss
       # fill cv.mse df
       cv.mse$tree.size[(i-1)*k+j] = i
       cv.mse$mse[(i-1)*k+j] = mse
-    
-    
-   }
-   cat("iteration: ", i, "\n")
-   
+      cv.mse$r2[(i-1)*k+j] = r2
+      }
+   cat("iteration: ", i, "\n")   
   }
   return(cv.mse)
 }
