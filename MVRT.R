@@ -55,10 +55,10 @@ for(i in 1:30){
 # create tree
 ct.final = ctree(formula, data = m, controls = ctree_control(testtype = "Bonferroni",
                                                              maxsurrogate = 0,
-                                                             maxdepth = 2))
+                                                             maxdepth = 3))
 
 # get id terminal nodes
-tNode = unique(where(ct.final))
+tNode = sort(unique(where(ct.final)))
 # init matrix for node predictions
 pNode = as.data.frame(matrix(nrow=length(tNode), ncol=length(ct.final@responses@variables)+1))
 colnames(pNode)[-1] = colnames(ct.final@responses@variables)
@@ -71,8 +71,20 @@ for(i in 1:length(tNode)){
 }
 
 #now plot output
-barplot(t(as.matrix(pNode[,-1])), 
-        beside = T,
-        col = cols, names.arg=rep(colnames(pNode)[-1], times = length(tNode)),
-        las = 2,
-        cex.names=0.5)
+# set colors first
+library(RColorBrewer)
+cols = rev(colorRampPalette(brewer.pal(8, "Set1"))(21))
+
+# set graph. parameters
+par(mfrow = c(2,length(tNode)/2))
+
+for(i in 1:length(tNode)){
+  barplot(t(as.matrix(pNode[i,-1])), 
+          beside = T,
+          col = cols, 
+          names.arg= colnames(pNode)[-1],
+          las = 2,
+          ylim = c(0,0.15),
+          cex.names=0.8,
+          main = pNode[i,1])
+}
