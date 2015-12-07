@@ -1,5 +1,10 @@
 # K-FOLD CROSS-VALIDATION FOR CONDITIONAL INFERENCE TREES
 # CV for ctree (party package)
+# ****************************
+# x = matrix containing all response and predictor variables
+# k = number of folds
+# formula = regression formula
+# maxsize = is size of largest tree to be grown
 
 CV.ctree = function(x,k,formula,maxsize){
   require("party")
