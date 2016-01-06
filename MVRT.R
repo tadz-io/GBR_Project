@@ -7,7 +7,7 @@ library("party")
 set.seed(290875)
 
 # subset data
-sel = sample(seq(1,1523), size = 1000, replace = F)
+# sel = sample(seq(1,1523), size = 1000, replace = F)
 # # subset species matrix
 # sp.sub = sp.clust[sel, 2:22]
 # rownames(sp.sub) = NULL
@@ -17,6 +17,7 @@ sel = sample(seq(1,1523), size = 1000, replace = F)
 
 m = cbind(sp.clust[,-1], env.clust[,c(-1,-2)])
 m$morph = as.factor(m$morph)
+
 # create tree
 # first set formula
 formula = as.formula(paste(paste(colnames(sp.clust[-1]), collapse = '+'),
@@ -47,15 +48,16 @@ for(i in 1:30){
 }
 
 # do k-fold cross-validation
-# to do: 
-# TURFSA + DSUB = TURF
+# then plot terminal nodes using script below
+
 
 # plot terminal nodes
 # ---------------------------------------------------------------------------------
 # create tree
-ct.final = ctree(formula, data = m, controls = ctree_control(testtype = "Bonferroni",
-                                                             maxsurrogate = 0,
-                                                             maxdepth = 3))
+ct.final = ctree(formula, data = m, control = ctree_control(testtype = "Bonferroni",
+                                                            maxsurrogate = 5,
+                                                            maxdepth = 3))
+                                                                            
 
 # get id terminal nodes
 tNode = sort(unique(where(ct.final)))
@@ -70,14 +72,62 @@ for(i in 1:length(tNode)){
   pNode[i,-1] = nodePredict.ctree(ct.final, nodeID = tNode[i])
 }
 
+# simplify outputs by aggregating catagories
+# TURFSA + DSUB = TURF
+pNode$Turf = pNode$Turf + pNode$Turfsa + pNode$DSUB
+pNode$Turfsa = NULL
+pNode$DSUB = NULL
+
+# load catagory list (func_cat.csv)
+func_cat = read.csv(file.choose(), header = T, sep = ";")
+func_cat$label = as.character(func_cat$label)
+# replace "-" in label names by "." so it matches names in pNode
+for(i in 1:length(func_cat$label)){
+  func_cat$label[i] = paste(strsplit(func_cat$label[i], "-")[[1]], collapse = ".")
+}
+
+pNode.s = pNode
+# convert to long format
+library("reshape")
+pNode.s = melt(pNode.s, id.vars = "NodeID")
+# sort data
+pNode.s = pNode.s[order(pNode.s$NodeID),]
+rownames(pNode.s) = NULL
+colnames(pNode.s)[which(names(pNode.s) == "value")] = "cover"
+# create simplified functional groups
+pNode.s$func = func_cat$func_group[match(pNode.s$variable, func_cat$label)]
+# create morphological functional groups
+pNode.s$morph = func_cat$morph[match(pNode.s$variable, func_cat$label)]
+# aggregate by functional group
+pNode.func = aggregate(cover~NodeID+func, data = pNode.s, sum)
+pNode.func = pNode.func[order(pNode.func$NodeID),]
+rownames(pNode.func) = NULL
+pNode.s$NodeID = as.factor(pNode.s$NodeID)
+
+#aggregate by morphological features
+pNode.morph = aggregate(cover~NodeID+morph, data = pNode.s, sum)
+pNode.morph = pNode.morph[order(pNode.morph$NodeID),]
+rownames(pNode.morph) = NULL
 #now plot output
 # set colors first
 library(RColorBrewer)
-cols = rev(colorRampPalette(brewer.pal(8, "Set1"))(21))
+cols = rev(colorRampPalette(brewer.pal(8, "Set1"))(8))
 
 # set graph. parameters
-par(mfrow = c(2,length(tNode)/2))
+par(mfrow = c(2,length(tNode)/2), mar = c(3,3,3,3))
 
+# plotting for long-format
+for(i in 1:length(tNode)){
+  barplot(pNode.morph$cover[pNode.morph$NodeID == tNode[i]],
+          col = cols,
+          ylim = c(0,0.5),
+          names.arg = pNode.morph$morph[pNode.morph$NodeID == tNode[i]],
+          las = 2,
+          cex.names = 1,
+          main = tNode[i])
+}
+
+# plotting loop for wide-format
 for(i in 1:length(tNode)){
   barplot(t(as.matrix(pNode[i,-1])), 
           beside = T,
