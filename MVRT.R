@@ -56,8 +56,9 @@ for(i in 1:30){
 # create tree
 ct.final = ctree(formula, data = m, control = ctree_control(testtype = "Bonferroni",
                                                             maxsurrogate = 5,
-                                                            maxdepth = 2))
+                                                            maxdepth = 3))
                                                                             
+
 # get id terminal nodes
 tNode = sort(unique(where(ct.final)))
 # init matrix for node predictions
@@ -117,17 +118,16 @@ par(mfrow = c(2,length(tNode)/2), mar = c(3,3,3,3))
 
 # plotting for long-format
 for(i in 1:length(tNode)){
-  barplot(pNode.func$cover[pNode.func$NodeID == tNode[i]],
+  barplot(pNode.morph$cover[pNode.morph$NodeID == tNode[i]],
           col = cols,
           ylim = c(0,0.5),
-          names.arg = pNode.func$func[pNode.func$NodeID == tNode[i]],
+          names.arg = pNode.morph$morph[pNode.morph$NodeID == tNode[i]],
           las = 2,
           cex.names = 1,
           main = tNode[i])
 }
 
 # plotting loop for wide-format
-# ------------------------------
 for(i in 1:length(tNode)){
   barplot(t(as.matrix(pNode[i,-1])), 
           beside = T,

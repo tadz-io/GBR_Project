@@ -1,6 +1,6 @@
 #libs
 library("sp")
-library("ggmap")
+
 #calculate centroid per transect
 trans = unique(cdata$trans)
 im.count = data.frame(matrix(0, nrow=length(trans), ncol=5))
