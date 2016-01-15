@@ -41,7 +41,6 @@ clust.seq = lapply(sdata, int = d, function(x, int){
   
   # calcualte values per cluster
   subtrans.dat = lapply(subtrans, function(y){
-    
     # calculate max distance between images and number of images + quads per cluster
     dmax = max(dist(y@coords))
     no.img = length(y$image)
@@ -112,6 +111,8 @@ clust.seq = rbindlist(Map(cbind, id = as.factor(n), clust.seq))
 clust.hrc = rbindlist(Map(cbind, id = as.factor(n2), clust.hrc))
 
 # aggregate data
+# note that we are also taking the mean of coordinates and not centroids of subtransects
+# for short distances this should not matter much
 ag.seq = aggregate(cbind(no.quad, no.img, dmax) ~ id, data = clust.seq, mean, na.rm = TRUE)
 ag.hrc = aggregate(cbind(no.quad, no.img, dmax) ~ id, data = clust.hrc, mean, na.rm = TRUE)
 
@@ -142,14 +143,16 @@ group =   c("ACR.BRA", "ACR.HIP", "ACR.OTH", "ACR.PE",
             "Sand", "Turf", "Turfsa")
 
 # assign id to species matrix (obtained from cdata) by merging clust.sel and cdata df's
-sp = as.data.frame(merge(clust.sel, cdata, by = "image"))[,c("id", group)]
+sp = as.data.frame(merge(clust.sel, cdata, by = "image"))[,c("id", "lat", "lon", group)]
 
 # match and bind cluster-id to environmental vars
 # same procedure as above
+# need variable "env" from env_extract.R script (crappy coding, will have to fix later)
 env.m = as.data.frame(merge(clust.sel, env, by = "image"))[,c("id", colnames(env))] 
   
 # aggregate data according to cluster ID
-# using mean to summarize data within clusters
+# using mean to summarize data within clusters; note that also mean of coordinates is calculated
+# so this do indicate centroid of subtransect but shouldn't be too far off for short distances
 sp.clust = aggregate(. ~ id, data = sp, FUN = mean)
 # need to specify action to be taken when encountering NAs in data
 # na.pass passes data unchanged when encountering NAs
