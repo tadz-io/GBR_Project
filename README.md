@@ -1,6 +1,6 @@
-#Spatial analysis of community assemblages across the Great Barrier Reef
+# Spatial analysis of community assemblages across the Great Barrier Reef
 
-#####UNIVERSITY OF QUEENSLAND
+##### UNIVERSITY OF QUEENSLAND
 
 analysis + scripts
 
